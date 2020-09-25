@@ -26,6 +26,7 @@
 #define __HELLOWORLD_SCENE_H__
 
 #include "cocos2d.h"
+#include <vector>
 
 class ConvictionScene : public cocos2d::Scene {
 public:
@@ -47,11 +48,13 @@ private:
     virtual bool onTouchBegan(cocos2d::Touch *touch, cocos2d::Event *event);
 
     void addRandomElement(cocos2d::Vec2 position);
+    void removeRandomElement();
 
     void onKeyReleased(cocos2d::EventKeyboard::KeyCode keyCode, cocos2d::Event *event);
 
     cocos2d::Label *convictionLabel;
-    int convictionCount=1;
+    int convictionCount = 1;
+    std::vector <cocos2d::Node *> particles;
 };
 
 #endif // __HELLOWORLD_SCENE_H__

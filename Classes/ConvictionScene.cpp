@@ -1,4 +1,6 @@
 #include "ConvictionScene.h"
+#include "AudioEngine.h"
+#include "ui/CocosGUI.h"
 
 USING_NS_CC;
 
@@ -57,7 +59,7 @@ bool ConvictionScene::init() {
     touchListener->onTouchBegan = CC_CALLBACK_2(ConvictionScene::onTouchBegan, this);
     _eventDispatcher->addEventListenerWithSceneGraphPriority(touchListener, this);
 
-    convictionLabel = Label::createWithTTF("1", "fonts/Marker Felt.ttf", 40);
+    convictionLabel = Label::createWithTTF("1", "fonts/arial.ttf", 40);
     convictionLabel->setColor(Color3B(255, 215, 0));
     convictionLabel->setPosition(Point(visibleSize.width * 0.97, visibleSize.height * 0.97));
     addChild(convictionLabel, 1000);
@@ -68,12 +70,21 @@ bool ConvictionScene::init() {
     convictionLabel->setString(std::to_string(convictions));
     int width = visibleSize.width;
     int height = visibleSize.height;
+    if (convictions < 1)convictions = 1;
     while (convictions--)
         this->addRandomElement(Vec2(rand() % width, rand() % height));
 
-//    auto particle = ParticleSystemQuad::create("res/p4.plist");
-//    particle->setPosition(200,200);
-//    addChild(particle);
+    AudioEngine::play2d("bg.mp3", true);
+
+    auto button = ui::Button::create("remove.png", "remove.png", "remove.png");
+    button->setScale(0.07);
+    button->setPosition(Vec2(40, 40));
+    button->addTouchEventListener([&](Ref *sender, ui::Widget::TouchEventType type) {
+        if (type == ui::Widget::TouchEventType::BEGAN)
+            this->removeRandomElement();
+    });
+
+    addChild(button);
     return true;
 }
 
@@ -99,7 +110,7 @@ bool ConvictionScene::onTouchBegan(cocos2d::Touch *touch, cocos2d::Event *event)
 }
 
 void ConvictionScene::addRandomElement(cocos2d::Vec2 position) {
-    auto type =rand() % 14;
+    auto type = rand() % 14;
     Node *particle;
     switch (type) {
         case 0:
@@ -167,6 +178,7 @@ void ConvictionScene::addRandomElement(cocos2d::Vec2 position) {
     spriteBody->setContactTestBitmask(true);
     particle->setPhysicsBody(spriteBody);
     particle->setPosition(position);
+    this->particles.push_back(particle);
     addChild(particle);
 }
 
@@ -174,4 +186,15 @@ void ConvictionScene::onKeyReleased(EventKeyboard::KeyCode keyCode, Event *event
     if (keyCode == EventKeyboard::KeyCode::KEY_BACK) {
         menuCloseCallback(this);
     }
+}
+
+void ConvictionScene::removeRandomElement() {
+    if (convictionCount <= 0)return;
+    auto particle = this->particles.back();
+    this->removeChild(particle, true);
+    this->particles.pop_back();
+    --convictionCount;
+    UserDefault *def = UserDefault::getInstance();
+    def->setIntegerForKey("CONVICTIONS", convictionCount);
+    convictionLabel->setString(std::to_string(convictionCount));
 }
